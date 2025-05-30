@@ -1,0 +1,160 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+
+/* Base styles */
+@layer base {
+  body {
+    font-family: 'Nunito', sans-serif;
+    color: #111827;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    text-transform: capitalize;
+    letter-spacing: 0.03em;
+    line-height: 1.15;
+  }
+
+  h1 { font-size: 3.9rem; }
+  h2 { font-size: 3.6rem; }
+  h3 { font-size: 2.1rem; }
+  h4 { font-size: 1.4rem; }
+  h5 { font-size: 1.3rem; font-weight: 300; }
+  h6 { font-size: 1.1rem; }
+
+  /* Responsive headings */
+  @media (max-width: 999px) {
+    h1 { font-size: 3rem; }
+    h2 { font-size: 2.95rem; }
+    h3 { font-size: 1.5rem; }
+    h4 { font-size: 1.24rem; }
+    h5 { font-size: 1.20rem; }
+  }
+
+  @media (max-width: 500px) {
+    h1 { font-size: 2.6rem; }
+    h2 { font-size: 2rem; }
+  }
+}
+
+/* Component styles */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center font-medium rounded-full transition-colors duration-300 cursor-pointer;
+    font-weight: 500;
+    text-transform: capitalize;
+    letter-spacing: 0.09em;
+    padding: 1.125rem 2.625rem;
+    font-size: 1rem;
+  }
+
+  .btn-primary {
+    @apply bg-primary-500 text-white hover:bg-gray-900;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-900 text-white hover:bg-primary-500;
+  }
+
+  .btn-outline {
+    @apply border border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white;
+  }
+
+  .card {
+    @apply bg-white rounded-3xl border border-gray-200 hover:shadow-soft transition-shadow duration-300;
+  }
+
+  .section-padding {
+    @apply py-16 lg:py-20;
+  }
+
+  .container-custom {
+    @apply container mx-auto px-4;
+  }
+
+  /* Book card hover effects */
+  .book-card {
+    @apply relative bg-white rounded-lg p-4 border hover:shadow-lg transition-all duration-300;
+  }
+
+  .book-card-actions {
+    @apply absolute inset-x-0 bottom-4 flex justify-center gap-2 transition-all duration-300 opacity-0 translate-y-4;
+  }
+
+  .book-card:hover .book-card-actions {
+    @apply opacity-100 translate-y-0;
+  }
+
+  /* Navigation styles */
+  .nav-link {
+    @apply text-gray-700 hover:text-primary-500 font-semibold uppercase text-sm tracking-wider transition-colors duration-200;
+  }
+
+  .nav-link.active {
+    @apply text-primary-500;
+  }
+
+  /* Dropdown styles */
+  .dropdown-menu {
+    @apply absolute top-full mt-2 bg-white shadow-lg rounded-md opacity-0 invisible transition-all duration-300;
+  }
+
+  .dropdown:hover .dropdown-menu {
+    @apply opacity-100 visible;
+  }
+
+  /* Search popup */
+  .search-popup {
+    @apply fixed inset-0 bg-white z-50 flex items-center justify-center opacity-0 invisible transition-all duration-300;
+  }
+
+  .search-popup.is-visible {
+    @apply opacity-100 visible;
+  }
+
+  /* Mobile menu */
+  .mobile-menu {
+    @apply fixed inset-0 bg-black bg-opacity-50 z-50 opacity-0 invisible transition-all duration-300;
+  }
+
+  .mobile-menu.is-open {
+    @apply opacity-100 visible;
+  }
+
+  .mobile-menu-panel {
+    @apply fixed right-0 top-0 h-full w-80 bg-white shadow-lg transform translate-x-full transition-transform duration-300;
+  }
+
+  .mobile-menu.is-open .mobile-menu-panel {
+    @apply translate-x-0;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  .text-shadow {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  /* Custom animations */
+  @keyframes fadeIn {
+    from { 
+      opacity: 0; 
+      transform: translateY(20px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+}
