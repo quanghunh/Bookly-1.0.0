@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trò Chơi Phân Loại Động Vật</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+        }
+        .draggable {
+            cursor: grab;
+            transition: all 0.2s;
+        }
+        .draggable:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+        .draggable.dragging {
+            opacity: 0.8;
+        }
+        .category {
+            transition: all 0.3s;
+            min-height: 200px;
+        }
+        .category.drag-over {
+            background-color: rgba(255, 255, 255, 0.7);
+            transform: scale(1.02);
+        }
+        .feedback {
+            transition: all 0.3s;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        .animal-item {
+            background-size: 40px;
+            background-repeat: no-repeat;
+            background-position: 10px center;
+            padding-left: 60px;
+        }
+        .mammal { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23996633' d='M256 224c-79.5 0-144 64.5-144 144s64.5 144 144 144 144-64.5 144-144-64.5-144-144-144zm0 240c-52.9 0-96-43.1-96-96s43.1-96 96-96 96 43.1 96 96-43.1 96-96 96zm46.7-234.3c-7.9-7.9-20.7-7.9-28.7 0l-64 64c-7.9 7.9-7.9 20.7 0 28.7s20.7 7.9 28.7 0l64-64c7.9-7.9 7.9-20.7 0-28.7z'/%3E%3Cpath fill='%23996633' d='M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256 256-114.6 256-256S397.4 0 256 0zm0 464c-114.7 0-208-93.3-208-208S141.3 48 256 48s208 93.3 208 208-93.3 208-208 208z'/%3E%3C/svg%3E"); }
+        .reptile { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23006633' d='M256 224c-79.5 0-144 64.5-144 144s64.5 144 144 144 144-64.5 144-144-64.5-144-144-144zm0 240c-52.9 0-96-43.1-96-96s43.1-96 96-96 96 43.1 96 96-43.1 96-96 96zm46.7-234.3c-7.9-7.9-20.7-7.9-28.7 0l-64 64c-7.9 7.9-7.9 20.7 0 28.7s20.7 7.9 28.7 0l64-64c7.9-7.9 7.9-20.7 0-28.7z'/%3E%3Cpath fill='%23006633' d='M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256 256-114.6 256-256S397.4 0 256 0zm0 464c-114.7 0-208-93.3-208-208S141.3 48 256 48s208 93.3 208 208-93.3 208-208 208z'/%3E%3C/svg%3E"); }
+        .amphibian { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23009966' d='M256 224c-79.5 0-144 64.5-144 144s64.5 144 144 144 144-64.5 144-144-64.5-144-144-144zm0 240c-52.9 0-96-43.1-96-96s43.1-96 96-96 96 43.1 96 96-43.1 96-96 96zm46.7-234.3c-7.9-7.9-20.7-7.9-28.7 0l-64 64c-7.9 7.9-7.9 20.7 0 28.7s20.7 7.9 28.7 0l64-64c7.9-7.9 7.9-20.7 0-28.7z'/%3E%3Cpath fill='%23009966' d='M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256 256-114.6 256-256S397.4 0 256 0zm0 464c-114.7 0-208-93.3-208-208S141.3 48 256 48s208 93.3 208 208-93.3 208-208 208z'/%3E%3C/svg%3E"); }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
+            <h1 class="text-3xl font-bold text-center text-blue-800 mb-2">Trò Chơi Phân Loại Động Vật</h1>
+            <p class="text-center text-gray-600 mb-4">Kéo và thả các động vật vào đúng nhóm của chúng</p>
+            
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-4 mb-6">
+                <div id="progress-bar" class="progress-bar bg-green-500 h-4 rounded-full" style="width: 0%"></div>
+            </div>
+            
+            <!-- Score Display -->
+            <div class="flex justify-between mb-6">
+                <div class="text-lg font-semibold">Đúng: <span id="correct-count">0</span>/<span id="total-count">10</span></div>
+                <div class="text-lg font-semibold">Điểm: <span id="score">0</span></div>
+            </div>
+            
+            <!-- Feedback Area -->
+            <div id="feedback" class="feedback mb-6 p-4 rounded-lg text-center hidden"></div>
+            
+            <!-- Items to Categorize -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-blue-700">Các động vật cần phân loại:</h2>
+                <div id="items-container" class="flex flex-wrap gap-2 justify-center">
+                    <!-- Items will be generated here -->
+                </div>
+            </div>
+            
+            <!-- Categories -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="category bg-blue-100 p-4 rounded-lg border-2 border-blue-300" data-category="mammal">
+                    <h3 class="text-xl font-bold text-blue-800 mb-2 text-center">Động vật có vú</h3>
+                    <div class="category-items min-h-[150px]"></div>
+                </div>
+                
+                <div class="category bg-green-100 p-4 rounded-lg border-2 border-green-300" data-category="reptile">
+                    <h3 class="text-xl font-bold text-green-800 mb-2 text-center">Động vật bò sát</h3>
+                    <div class="category-items min-h-[150px]"></div>
+                </div>
+                
+                <div class="category bg-teal-100 p-4 rounded-lg border-2 border-teal-300" data-category="amphibian">
+                    <h3 class="text-xl font-bold text-teal-800 mb-2 text-center">Động vật lưỡng cư</h3>
+                    <div class="category-items min-h-[150px]"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reset Button -->
+        <div class="text-center">
+            <button id="reset-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all">
+                Chơi lại
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const animals = [
+                { id: 'animal1', name: 'Hổ', category: 'mammal' },
+                { id: 'animal2', name: 'Voi', category: 'mammal' },
+                { id: 'animal3', name: 'Khỉ', category: 'mammal' },
+                { id: 'animal4', name: 'Cá sấu', category: 'reptile' },
+                { id: 'animal5', name: 'Rắn', category: 'reptile' },
+                { id: 'animal6', name: 'Thằn lằn', category: 'reptile' },
+                { id: 'animal7', name: 'Ếch', category: 'amphibian' },
+                { id: 'animal8', name: 'Cóc', category: 'amphibian' },
+                { id: 'animal9', name: 'Kỳ nhông', category: 'amphibian' },
+                { id: 'animal10', name: 'Chuột', category: 'mammal' }
+            ];
+            
+            let correctCount = 0;
+            let score = 0;
+            const totalCount = animals.length;
+            
+            document.getElementById('total-count').textContent = totalCount;
+            
+            // Shuffle animals
+            const shuffledAnimals = [...animals].sort(() => Math.random() - 0.5);
+            
+            // Create animal elements
+            const itemsContainer = document.getElementById('items-container');
+            shuffledAnimals.forEach(animal => {
+                const animalElement = document.createElement('div');
+                animalElement.id = animal.id;
+                animalElement.classList.add('draggable', 'animal-item', animal.category);
+                animalElement.setAttribute('draggable', 'true');
+                animalElement.setAttribute('data-category', animal.category);
+                animalElement.innerHTML = `
+                    <div class="bg-white p-3 rounded-lg shadow-md border-2 border-gray-200 hover:border-blue-400 transition-all">
+                        <span class="font-medium">${animal.name}</span>
+                    </div>
+                `;
+                
+                animalElement.addEventListener('dragstart', dragStart);
+                itemsContainer.appendChild(animalElement);
+            });
+            
+            // Drag and drop functionality
+            let draggedItem = null;
+            
+            function dragStart(e) {
+                draggedItem = this;
+                setTimeout(() => {
+                    this.classList.add('dragging');
+                    this.style.opacity = '0.5';
+                }, 0);
+            }
+            
+            const categories = document.querySelectorAll('.category');
+            
+            categories.forEach(category => {
+                category.addEventListener('dragover', dragOver);
+                category.addEventListener('dragenter', dragEnter);
+                category.addEventListener('dragleave', dragLeave);
+                category.addEventListener('drop', drop);
+            });
+            
+            function dragOver(e) {
+                e.preventDefault();
+            }
+            
+            function dragEnter(e) {
+                e.preventDefault();
+                this.classList.add('drag-over');
+            }
+            
+            function dragLeave() {
+                this.classList.remove('drag-over');
+            }
+            
+            function drop() {
+                this.classList.remove('drag-over');
+                
+                const categoryType = this.getAttribute('data-category');
+                const animalCategory = draggedItem.getAttribute('data-category');
+                
+                const isCorrect = categoryType === animalCategory;
+                
+                // Move the item to the category
+                const categoryItems = this.querySelector('.category-items');
+                categoryItems.appendChild(draggedItem);
+                
+                // Remove drag functionality
+                draggedItem.removeAttribute('draggable');
+                draggedItem.classList.remove('dragging');
+                draggedItem.style.opacity = '1';
+                
+                // Add visual feedback
+                if (isCorrect) {
+                    draggedItem.querySelector('div').classList.add('border-green-500', 'bg-green-50');
+                    correctCount++;
+                    score += 10;
+                    showFeedback('Đúng rồi! 🎉', 'success');
+                } else {
+                    draggedItem.querySelector('div').classList.add('border-red-500', 'bg-red-50');
+                    showFeedback('Chưa đúng. Hãy thử lại! 🤔', 'error');
+                }
+                
+                // Update progress
+                updateProgress();
+                
+                // Check if game is complete
+                if (document.querySelectorAll('#items-container .draggable').length === 0) {
+                    setTimeout(() => {
+                        showFeedback(`Hoàn thành! Bạn đã đúng ${correctCount}/${totalCount} câu. Điểm số: ${score}`, 'complete');
+                    }, 1000);
+                }
+                
+                draggedItem = null;
+            }
+            
+            function showFeedback(message, type) {
+                const feedback = document.getElementById('feedback');
+                feedback.textContent = message;
+                feedback.classList.remove('hidden', 'bg-green-100', 'bg-red-100', 'bg-blue-100');
+                
+                if (type === 'success') {
+                    feedback.classList.add('bg-green-100', 'text-green-800');
+                } else if (type === 'error') {
+                    feedback.classList.add('bg-red-100', 'text-red-800');
+                } else if (type === 'complete') {
+                    feedback.classList.add('bg-blue-100', 'text-blue-800');
+                }
+                
+                setTimeout(() => {
+                    if (type !== 'complete') {
+                        feedback.classList.add('hidden');
+                    }
+                }, 2000);
+            }
+            
+            function updateProgress() {
+                document.getElementById('correct-count').textContent = correctCount;
+                document.getElementById('score').textContent = score;
+                
+                const progressPercentage = (correctCount / totalCount) * 100;
+                document.getElementById('progress-bar').style.width = `${progressPercentage}%`;
+            }
+            
+            // Reset game
+            document.getElementById('reset-button').addEventListener('click', function() {
+                location.reload();
+            });
+        });
+    </script>
+</body>
+</html>

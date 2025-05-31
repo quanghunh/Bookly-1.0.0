@@ -39,13 +39,13 @@ const Header = () => {
           <div className="hidden lg:flex items-center space-x-8">
             <a href="#" className="nav-link active">Home</a>
             <a href="#" className="nav-link">About</a>
-            <a href="#" className="nav-link">Shop</a>
+            <a href="/shop" className="nav-link">Shop</a>
             <a href="#" className="nav-link">Blogs</a>
             <div className="relative group dropdown">
               <button className="nav-link">Pages</button>
               <div className="dropdown-menu w-48 left-0">
                 <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">About</a>
-                <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Shop</a>
+                <a href="/shop" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Shop</a>
                 <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Single Product</a>
                 <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cart</a>
                 <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Checkout</a>
@@ -172,7 +172,7 @@ const Header = () => {
               <div className="space-y-4">
                 <a href="#" className="block text-gray-700 hover:text-primary-500 font-medium uppercase">Home</a>
                 <a href="#" className="block text-gray-700 hover:text-primary-500 font-medium uppercase">About</a>
-                <a href="#" className="block text-gray-700 hover:text-primary-500 font-medium uppercase">Shop</a>
+                <a href="/shop" className="block text-gray-700 hover:text-primary-500 font-medium uppercase">Shop</a>
                 <a href="#" className="block text-gray-700 hover:text-primary-500 font-medium uppercase">Blogs</a>
                 <a href="#" className="block text-gray-700 hover:text-primary-500 font-medium uppercase">Contact</a>
               </div>
