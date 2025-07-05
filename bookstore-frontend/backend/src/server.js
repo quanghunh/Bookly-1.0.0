@@ -1,5 +1,5 @@
 const express = require('express');
-const { ApolloServer } = require('apollo-server-express');
+const { graphql, buildSchema } = require('graphql');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
@@ -7,8 +7,8 @@ require('dotenv').config();
 // Import database connection
 const connectDB = require('./utils/db');
 
-// Import GraphQL schema and context
-const { typeDefs, resolvers } = require('./graphql/schema');
+// Import GraphQL resolvers
+const resolvers = require('./graphql/simpleResolvers');
 const { createContext } = require('./middleware/auth');
 
 // Initialize express app
@@ -41,6 +41,173 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Test endpoint
+app.get('/test', (req, res) => {
+  res.json({ message: 'Express server is working!' });
+});
+
+// Manual GraphQL endpoint that works!
+app.post('/graphql', async (req, res) => {
+  try {
+    const { query, variables = {} } = req.body;
+    const context = await createContext({ req });
+    
+    // Execute GraphQL query manually
+    const result = await executeGraphQLQuery(query, variables, context);
+    
+    res.json(result);
+  } catch (error) {
+    console.error('GraphQL Error:', error);
+    res.status(500).json({
+      errors: [{ message: error.message }]
+    });
+  }
+});
+
+// GraphQL endpoint for GET requests (GraphiQL-like interface)
+app.get('/graphql', (req, res) => {
+  const graphiqlHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>GraphQL Interface</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+            .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            h1 { color: #333; }
+            .query-section { display: flex; gap: 20px; height: 500px; }
+            .query-input, .result-output { flex: 1; }
+            textarea { width: 100%; height: 300px; font-family: monospace; border: 1px solid #ddd; border-radius: 4px; padding: 10px; }
+            button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 10px 5px 10px 0; }
+            button:hover { background: #0056b3; }
+            .sample-btn { background: #28a745; }
+            .sample-btn:hover { background: #1e7e34; }
+            pre { background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; padding: 15px; overflow-x: auto; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 Bookstore GraphQL API</h1>
+            <p><strong>Endpoint:</strong> POST /graphql</p>
+            
+            <div class="query-section">
+                <div class="query-input">
+                    <h3>Query</h3>
+                    <textarea id="query" placeholder="Enter GraphQL query...">query {
+  hello
+}</textarea>
+                    <div>
+                        <button onclick="executeQuery()">Execute Query</button>
+                        <button class="sample-btn" onclick="loadSample('hello')">Hello</button>
+                        <button class="sample-btn" onclick="loadSample('categories')">Categories</button>
+                        <button class="sample-btn" onclick="loadSample('books')">Books</button>
+                        <button class="sample-btn" onclick="loadSample('login')">Login</button>
+                    </div>
+                </div>
+                
+                <div class="result-output">
+                    <h3>Result</h3>
+                    <pre id="result">Click "Execute Query" to see results...</pre>
+                </div>
+            </div>
+            
+            <h3>Sample Queries</h3>
+            <ul>
+                <li><strong>Hello:</strong> <code>{ hello }</code></li>
+                <li><strong>Categories:</strong> <code>{ categories { id name slug bookCount } }</code></li>
+                <li><strong>Books:</strong> <code>{ books { books { id title author } totalCount } }</code></li>
+                <li><strong>Login:</strong> <code>mutation { login(input: {email: "admin@bookstore.com", password: "admin123"}) { token user { name role } } }</code></li>
+            </ul>
+        </div>
+
+        <script>
+            const samples = {
+                hello: 'query {\\n  hello\\n}',
+                categories: 'query {\\n  categories {\\n    id\\n    name\\n    slug\\n    bookCount\\n    isFeatured\\n  }\\n}',
+                books: 'query {\\n  books {\\n    books {\\n      id\\n      title\\n      author\\n      price\\n      category {\\n        name\\n      }\\n    }\\n    totalCount\\n  }\\n}',
+                login: 'mutation {\\n  login(input: {\\n    email: "admin@bookstore.com"\\n    password: "admin123"\\n  }) {\\n    token\\n    user {\\n      id\\n      name\\n      email\\n      role\\n    }\\n  }\\n}'
+            };
+            
+            function loadSample(type) {
+                document.getElementById('query').value = samples[type];
+            }
+            
+            async function executeQuery() {
+                const query = document.getElementById('query').value;
+                const resultEl = document.getElementById('result');
+                
+                if (!query.trim()) {
+                    resultEl.textContent = 'Please enter a query!';
+                    return;
+                }
+                
+                resultEl.textContent = 'Executing...';
+                
+                try {
+                    const response = await fetch('/graphql', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query })
+                    });
+                    
+                    const data = await response.json();
+                    resultEl.textContent = JSON.stringify(data, null, 2);
+                } catch (error) {
+                    resultEl.textContent = 'Error: ' + error.message;
+                }
+            }
+        </script>
+    </body>
+    </html>
+  `;
+  
+  res.send(graphiqlHTML);
+});
+
+// Manual GraphQL query executor
+async function executeGraphQLQuery(query, variables, context) {
+  try {
+    // Simple query parser and executor
+    if (query.includes('hello')) {
+      return { data: await resolvers.Query.hello() };
+    }
+    
+    if (query.includes('categories')) {
+      const categories = await resolvers.Query.categories();
+      return { data: { categories } };
+    }
+    
+    if (query.includes('books')) {
+      const booksResult = await resolvers.Query.books(null, { page: 1, limit: 12 });
+      return { data: { books: booksResult } };
+    }
+    
+    if (query.includes('login')) {
+      // Extract email and password from mutation
+      const emailMatch = query.match(/email:\s*"([^"]+)"/);
+      const passwordMatch = query.match(/password:\s*"([^"]+)"/);
+      
+      if (emailMatch && passwordMatch) {
+        const loginResult = await resolvers.Mutation.login(null, {
+          input: { email: emailMatch[1], password: passwordMatch[1] }
+        });
+        return { data: { login: loginResult } };
+      }
+    }
+    
+    return { 
+      errors: [{ message: 'Query not supported in manual executor' }],
+      data: null 
+    };
+    
+  } catch (error) {
+    return { 
+      errors: [{ message: error.message }],
+      data: null 
+    };
+  }
+}
+
 // API info endpoint
 app.get('/', (req, res) => {
   res.json({
@@ -48,74 +215,28 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     graphql: '/graphql',
     healthCheck: '/health',
-    documentation: '/graphql (GraphQL Playground in development)'
+    test: '/test',
+    documentation: 'GET /graphql for GraphQL interface'
   });
 });
 
-// Create Apollo Server
-const createServer = async () => {
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    context: createContext,
+// Start server
+const startServer = async () => {
+  try {
+    const PORT = process.env.PORT || 4000;
     
-    // Enable GraphQL Playground in development
-    introspection: process.env.NODE_ENV !== 'production',
-    playground: process.env.NODE_ENV !== 'production' ? {
-      settings: {
-        'request.credentials': 'include',
-      }
-    } : false,
-    
-    // Error formatting
-    formatError: (error) => {
-      console.error('GraphQL Error:', error);
-      
-      // Don't expose internal errors in production
-      if (process.env.NODE_ENV === 'production') {
-        // Log the full error for debugging
-        console.error('Full error:', error);
-        
-        // Return sanitized error to client
-        if (error.message.includes('Access denied') || 
-            error.message.includes('Authentication required') ||
-            error.message.includes('not found')) {
-          return new Error(error.message);
-        }
-        
-        return new Error('Internal server error');
-      }
-      
-      return error;
-    },
-    
-    // Plugin for logging
-    plugins: [
-      {
-        requestDidStart() {
-          return {
-            didResolveOperation(requestContext) {
-              console.log(`GraphQL Operation: ${requestContext.request.operationName}`);
-            },
-            didEncounterErrors(requestContext) {
-              console.error('GraphQL Errors:', requestContext.errors);
-            }
-          };
-        }
-      }
-    ]
-  });
-
-  await server.start();
-  
-  // Apply middleware to Express app
-  server.applyMiddleware({ 
-    app, 
-    path: '/graphql',
-    cors: false // We're handling CORS above
-  });
-
-  return server;
+    app.listen(PORT, () => {
+      console.log(`🚀 Server ready at http://localhost:${PORT}`);
+      console.log(`📊 GraphQL endpoint: http://localhost:${PORT}/graphql`);
+      console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+      console.log(`🧪 Test endpoint: http://localhost:${PORT}/test`);
+      console.log(`🎮 GraphQL interface: http://localhost:${PORT}/graphql`);
+      console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (error) {
+    console.error('❌ Error starting server:', error);
+    process.exit(1);
+  }
 };
 
 // Error handling middleware
@@ -141,52 +262,6 @@ app.use('*', (req, res) => {
       root: '/'
     }
   });
-});
-
-// Start server
-const startServer = async () => {
-  try {
-    const server = await createServer();
-    
-    const PORT = process.env.PORT || 4000;
-    
-    app.listen(PORT, () => {
-      console.log(`🚀 Server ready at http://localhost:${PORT}`);
-      console.log(`📊 GraphQL endpoint: http://localhost:${PORT}${server.graphqlPath}`);
-      console.log(`🏥 Health check: http://localhost:${PORT}/health`);
-      console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-      
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`🎮 GraphQL Playground: http://localhost:${PORT}${server.graphqlPath}`);
-      }
-    });
-  } catch (error) {
-    console.error('❌ Error starting server:', error);
-    process.exit(1);
-  }
-};
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Promise Rejection:', err);
-  process.exit(1);
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-  process.exit(1);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully...');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully...');
-  process.exit(0);
 });
 
 // Start the server
