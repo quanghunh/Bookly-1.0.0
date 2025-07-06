@@ -66,8 +66,8 @@ const bookSchema = new mongoose.Schema({
   },
   dimensions: {
     length: Number, // cm
-    width: Number,  // cm
-    height: Number  // cm
+    width: Number,  // cm
+    height: Number  // cm
   },
   weight: Number, // grams
   images: [{
@@ -282,15 +282,15 @@ bookSchema.methods.updateStock = function(quantity, operation = 'subtract') {
   return this.save();
 };
 
-// Instance method to update rating
+// Instance method to update rating - Đã được điều chỉnh
+// Logic tính toán rating và reviewCount giờ được quản lý bởi Review model.
+// Phương thức này chỉ còn là một giữ chỗ (placeholder) và in cảnh báo.
 bookSchema.methods.updateRating = function(newRating, isNewReview = true) {
-  if (isNewReview) {
-    const totalRating = this.rating * this.reviewCount + newRating;
-    this.reviewCount += 1;
-    this.rating = totalRating / this.reviewCount;
-  }
-  return this.save();
+  console.warn("bookSchema.methods.updateRating is deprecated. Book rating and reviewCount are now automatically updated via Review model's hooks.");
+  // Bạn có thể bỏ qua hoặc trả về promise để không làm lỗi các lời gọi hiện có
+  return Promise.resolve(this); 
 };
+
 
 // Ensure virtual fields are serialized
 bookSchema.set('toJSON', { virtuals: true });

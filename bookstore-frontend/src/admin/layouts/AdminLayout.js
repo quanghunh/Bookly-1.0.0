@@ -10,13 +10,15 @@ import {
   TagIcon,
   ChartBarIcon,
   ArrowRightOnRectangleIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  StarIcon // THÊM DÒNG NÀY: Import icon cho Reviews
 } from '@heroicons/react/24/outline';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon },
   { name: 'Categories', href: '/admin/categories', icon: TagIcon },
   { name: 'Books', href: '/admin/books', icon: BookOpenIcon },
+  { name: 'Reviews', href: '/admin/reviews', icon: StarIcon }, // THÊM DÒNG NÀY: Mục Reviews
 ];
 
 function AdminLayout() {
