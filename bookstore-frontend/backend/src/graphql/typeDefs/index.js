@@ -2,6 +2,7 @@ const { gql } = require('apollo-server-express');
 const userTypeDefs = require('./userTypeDefs');
 const bookTypeDefs = require('./bookTypeDefs');
 const categoryTypeDefs = require('./categoryTypeDefs');
+const reviewTypeDefs = require('./reviewTypeDefs');
 
 // Base type definitions
 const baseTypeDefs = gql`
@@ -20,12 +21,13 @@ const baseTypeDefs = gql`
   }
 `;
 
-// Combine all type definitions into a single string
+// Combine all type definitions into a single array
 const typeDefs = [
   baseTypeDefs,
   userTypeDefs,
   bookTypeDefs,
-  categoryTypeDefs
+  categoryTypeDefs,
+  reviewTypeDefs
 ];
 
 module.exports = typeDefs;

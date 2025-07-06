@@ -12,12 +12,13 @@ import { AuthProvider } from './contexts/AuthContext';
 // Components
 import Home from './pages/Home';
 
-// Admin Components (we'll create these next)
+// Admin Components
 import AdminLogin from './admin/pages/Login';
 import AdminDashboard from './admin/pages/Dashboard';
 import AdminLayout from './admin/layouts/AdminLayout';
 import AdminCategories from './admin/pages/Categories';
 import AdminBooks from './admin/pages/Books';
+import AdminReviews from './admin/pages/Reviews';
 
 // Styles
 import './App.css';
@@ -57,6 +58,7 @@ function App() {
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="categories" element={<AdminCategories />} />
                 <Route path="books" element={<AdminBooks />} />
+                <Route path="reviews" element={<AdminReviews />} />
               </Route>
               
               {/* Catch all route */}
