@@ -2,13 +2,13 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
-import { GET_BOOK, GET_REVIEWS_FOR_PRODUCT } from '../../graphql/queries'; // Đảm bảo đã import GET_BOOK và GET_REVIEWS_FOR_PRODUCT
+import { GET_BOOK, GET_REVIEWS_FOR_PRODUCT } from '../../graphql/queries'; // GIỮ LẠI DÒNG IMPORT NÀY DUY NHẤT
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
-import ReviewCard from '../../components/ui/ReviewCard'; // Đảm bảo đã import ReviewCard
-import ReviewForm from '../../components/ui/ReviewForm'; // Đảm bảo đã import ReviewForm
-import StarRating from '../../components/common/StarRating'; // Đảm bảo đã import StarRating
-import Button from '../../components/common/Button'; // Đảm bảo đã import Button
+import ReviewCard from '../../components/ui/ReviewCard';
+import ReviewForm from '../../components/ui/ReviewForm';
+import StarRating from '../../components/common/StarRating';
+import Button from '../../components/common/Button';
 
 // Pagination component (Bạn có thể cần tạo component này nếu chưa có)
 // Ví dụ đơn giản cho Pagination:

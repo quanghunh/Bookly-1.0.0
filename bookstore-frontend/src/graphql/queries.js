@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql } from '@apollo/client'; // CHỈ GIỮ LẠI DÒNG NÀY MỘT LẦN DUY NHẤT
 
 // Auth Queries & Mutations
 export const LOGIN_MUTATION = gql`
@@ -234,8 +234,6 @@ export const GET_DASHBOARD_STATS = gql`
     }
   }
 `;
-
-import { gql } from '@apollo/client';
 
 // Review Queries & Mutations
 export const GET_REVIEWS_FOR_PRODUCT = gql`
