@@ -1,4 +1,4 @@
-// backend/src/graphql/singleTypeDefs.js - Updated version
+// backend/src/graphql/singleTypeDefs.js - Complete Updated Version
 const { gql } = require('apollo-server-express');
 
 const typeDefs = gql`
@@ -8,14 +8,21 @@ const typeDefs = gql`
     # Test query
     hello: String
     
-    # Category queries
-    categories: [Category!]!
+    # Category queries - UPDATED to support featured parameter
+    categories(featured: Boolean): [Category!]!
     category(id: ID!): Category
     categoryBySlug(slug: String!): Category
     activeCategories: [Category!]!
     
-    # Book queries  
-    books(page: Int = 1, limit: Int = 12, search: String): BookConnection!
+    # Book queries - UPDATED to support featured, orderBy, orderDirection
+    books(
+      page: Int = 1, 
+      limit: Int = 12, 
+      search: String, 
+      featured: Boolean, 
+      orderBy: String, 
+      orderDirection: String
+    ): BookConnection!
     book(id: ID!): Book
     bookBySlug(slug: String!): Book
     featuredBooks(limit: Int = 8): [Book!]!

@@ -15,13 +15,25 @@ import {
 
 const CustomerHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, logout } = useCustomerAuth();
+  
+  // Always call hooks at the top level - never conditionally
   const navigate = useNavigate();
+  const { user, logout } = useCustomerAuth();
 
   const handleLogout = () => {
-    logout();
-    toast.success('Logged out successfully');
-    navigate('/login');
+    try {
+      logout();
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (error) {
+      console.warn('Logout error:', error);
+      // Fallback navigation
+      window.location.href = '/login';
+    }
+  };
+
+  const handleMobileMenuToggle = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   return (
@@ -72,7 +84,7 @@ const CustomerHeader = () => {
             <div className="relative group">
               <button className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors">
                 <User size={20} />
-                <span className="hidden md:block text-sm">{user?.name}</span>
+                <span className="hidden md:block text-sm">{user?.name || 'Guest'}</span>
               </button>
               
               <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
@@ -112,8 +124,69 @@ const CustomerHeader = () => {
                 0
               </span>
             </div>
+
+            {/* Mobile menu button */}
+            <button 
+              onClick={handleMobileMenuToggle}
+              className="lg:hidden p-2 text-gray-700 hover:text-blue-600 transition-colors"
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="lg:hidden mt-4 py-4 border-t border-gray-200">
+            <div className="flex flex-col space-y-4">
+              <Link
+                to="/shop"
+                className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Shop
+              </Link>
+              <Link
+                to="/categories"
+                className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Categories
+              </Link>
+              <Link
+                to="/about"
+                className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                About
+              </Link>
+              <Link
+                to="/profile"
+                className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                My Profile
+              </Link>
+              <Link
+                to="/orders"
+                className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                My Orders
+              </Link>
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleLogout();
+                }}
+                className="text-left text-red-600 hover:text-red-700 font-medium transition-colors flex items-center"
+              >
+                <LogOut size={16} className="mr-2" />
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

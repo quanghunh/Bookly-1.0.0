@@ -1,41 +1,66 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMutation } from '@apollo/client';
-import { useForm } from 'react-hook-form';
-import { useNavigate, Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { Eye, EyeOff, Book, Mail, Lock } from 'lucide-react';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { CUSTOMER_LOGIN_MUTATION } from '../../graphql/customer-queries';
+import toast from 'react-hot-toast';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 
 const Login = () => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
+  
   const { login } = useCustomerAuth();
-  
-  const { register, handleSubmit, formState: { errors } } = useForm();
-  
-  const [customerLoginMutation, { loading }] = useMutation(CUSTOMER_LOGIN_MUTATION, {
+  const navigate = useNavigate();
+
+  const [customerLogin, { loading, error }] = useMutation(CUSTOMER_LOGIN_MUTATION, {
+    errorPolicy: 'all',
     onCompleted: (data) => {
-      const { success, message, user } = data.customerLogin;
+      console.log('✅ Login response:', data);
       
-      if (success) {
-        // Login without token - chỉ lưu user info
+      if (data?.customerLogin?.success) {
+        const user = data.customerLogin.user;
         login(user);
-        toast.success(message || `Welcome back, ${user.name}!`);
+        toast.success(data.customerLogin.message || 'Login successful!');
         navigate('/shop');
       } else {
-        toast.error(message || 'Login failed');
+        const message = data?.customerLogin?.message || 'Login failed';
+        console.log('❌ Login failed:', message);
+        toast.error(message);
       }
     },
     onError: (error) => {
-      console.error('Login error:', error);
+      console.error('❌ Login error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        graphQLErrors: error.graphQLErrors,
+        networkError: error.networkError
+      });
       toast.error(error.message || 'Login failed. Please try again.');
     }
   });
 
-  const onSubmit = async (formData) => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    console.log('🚀 Attempting login with:', {
+      email: formData.email,
+      password: '***hidden***'
+    });
+    
     try {
-      await customerLoginMutation({
+      await customerLogin({
         variables: {
           input: {
             email: formData.email,
@@ -44,69 +69,157 @@ const Login = () => {
         }
       });
     } catch (error) {
-      // Error handled in onError callback
+      console.error('💥 Submit error:', error);
+      // Error is also handled in onError callback
+    }
+  };
+
+  // Mock login for testing
+  const handleMockLogin = () => {
+    const mockUser = {
+      id: '1',
+      name: 'John Doe',
+      email: 'customer@bookstore.com',
+      role: 'customer'
+    };
+    
+    login(mockUser);
+    toast.success('Mock login successful!');
+    navigate('/shop');
+  };
+
+  // Test direct fetch to GraphQL
+  const handleTestDirectFetch = async () => {
+    console.log('🧪 Testing direct fetch to GraphQL...');
+    
+    try {
+      const response = await fetch('http://localhost:4000/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `
+            mutation CustomerLogin($input: CustomerLoginInput!) {
+              customerLogin(input: $input) {
+                success
+                message
+                user {
+                  id
+                  name
+                  email
+                  role
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              email: 'customer@bookstore.com',
+              password: 'customer123'
+            }
+          }
+        }),
+      });
+      
+      const result = await response.json();
+      console.log('🔍 Direct fetch result:', result);
+      toast.success('Check console for direct fetch result');
+    } catch (error) {
+      console.error('💥 Direct fetch error:', error);
+      toast.error('Direct fetch failed');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
-            <Book className="h-6 w-6 text-blue-600" />
-          </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Welcome back
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to your account to continue shopping
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Or{' '}
+            <Link
+              to="/register"
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              create a new account
+            </Link>
           </p>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4">
+
+        {/* Debug info */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <h3 className="text-sm font-medium text-red-800 mb-2">GraphQL Error:</h3>
+            <pre className="text-xs text-red-600 overflow-auto">
+              {JSON.stringify(error, null, 2)}
+            </pre>
+          </div>
+        )}
+
+        {/* Test buttons */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+          <h3 className="text-sm font-medium text-yellow-800 mb-2">Testing:</h3>
+          <div className="space-y-2">
+            <button
+              onClick={handleMockLogin}
+              className="w-full bg-green-600 text-white py-2 px-4 rounded-md text-sm hover:bg-green-700"
+            >
+              Mock Login (No GraphQL)
+            </button>
+            <button
+              onClick={handleTestDirectFetch}
+              className="w-full bg-purple-600 text-white py-2 px-4 rounded-md text-sm hover:bg-purple-700"
+            >
+              Test Direct Fetch
+            </button>
+          </div>
+        </div>
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="sr-only">
                 Email address
               </label>
-              <div className="mt-1 relative">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
-                  {...register('email', {
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Invalid email address'
-                    }
-                  })}
+                  id="email"
+                  name="email"
                   type="email"
-                  className="appearance-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10"
-                  placeholder="Enter your email"
+                  autoComplete="email"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-12 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Email address"
+                  value={formData.email}
+                  onChange={handleInputChange}
                 />
-                <Mail className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
               </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
             </div>
-            
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="sr-only">
                 Password
               </label>
-              <div className="mt-1 relative">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
-                  {...register('password', {
-                    required: 'Password is required',
-                    minLength: {
-                      value: 6,
-                      message: 'Password must be at least 6 characters'
-                    }
-                  })}
+                  id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
-                  className="appearance-none relative block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10"
-                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-12 py-3 pr-12 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleInputChange}
                 />
-                <Lock className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
@@ -119,9 +232,6 @@ const Login = () => {
                   )}
                 </button>
               </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-              )}
             </div>
           </div>
 
@@ -139,9 +249,12 @@ const Login = () => {
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link
+                to="/forgot-password"
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
                 Forgot your password?
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -149,40 +262,23 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Signing in...
+                  Signing in with GraphQL...
                 </div>
               ) : (
-                'Sign in'
+                'Sign in with GraphQL'
               )}
             </button>
           </div>
-          
+
           <div className="text-center">
-            <span className="text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link
-                to="/register"
-                className="font-medium text-blue-600 hover:text-blue-500"
-              >
-                Sign up here
-              </Link>
-            </span>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-sm text-gray-600 mb-2">
-              Demo Accounts:
-            </div>
-            <div className="text-xs text-gray-500 space-y-1">
-              <div>customer@bookstore.com / customer123</div>
-              <div>john@example.com / 123456</div>
-              <div>nguyenvanan@gmail.com / 123456</div>
-            </div>
+            <p className="text-sm text-gray-600">
+              Test credentials: customer@bookstore.com / customer123
+            </p>
           </div>
         </form>
       </div>

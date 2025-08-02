@@ -1,4 +1,4 @@
-// backend/src/graphql/simpleResolvers.js - Updated version
+// backend/src/graphql/simpleResolvers.js - Complete Updated Version
 const Book = require('../models/Book');
 const Category = require('../models/Category');
 const User = require('../models/User');
@@ -8,10 +8,17 @@ const resolvers = {
   Query: {
     hello: () => 'Hello from GraphQL!',
     
-    // Category queries
-    categories: async () => {
+    // Category queries - UPDATED to support featured parameter
+    categories: async (_, { featured }) => {
       try {
-        return await Category.find({ isActive: true }).sort({ sortOrder: 1, name: 1 });
+        let query = { isActive: true };
+        
+        // Add featured filter if specified
+        if (featured !== undefined) {
+          query.isFeatured = featured;
+        }
+        
+        return await Category.find(query).sort({ sortOrder: 1, name: 1 });
       } catch (error) {
         throw new Error(`Error fetching categories: ${error.message}`);
       }
@@ -41,13 +48,18 @@ const resolvers = {
       }
     },
 
-    // Book queries for customers (không cần auth)
-    books: async (_, { page = 1, limit = 12, search }) => {
+    // Book queries - UPDATED to support featured, orderBy, orderDirection
+    books: async (_, { page = 1, limit = 12, search, featured, orderBy = 'createdAt', orderDirection = 'DESC' }) => {
       try {
         const skip = (page - 1) * limit;
         
         // Build query - chỉ lấy sách active
         let query = { isActive: true };
+        
+        // Add featured filter if specified
+        if (featured !== undefined) {
+          query.isFeatured = featured;
+        }
         
         // Search functionality
         if (search) {
@@ -58,9 +70,35 @@ const resolvers = {
           ];
         }
         
+        // Build sort object
+        const sortDirection = orderDirection === 'ASC' ? 1 : -1;
+        let sort = {};
+        
+        switch (orderBy) {
+          case 'sold':
+            sort = { sold: sortDirection };
+            break;
+          case 'price':
+            sort = { price: sortDirection };
+            break;
+          case 'rating':
+            sort = { rating: sortDirection };
+            break;
+          case 'title':
+            sort = { title: sortDirection };
+            break;
+          case 'author':
+            sort = { author: sortDirection };
+            break;
+          case 'createdAt':
+          default:
+            sort = { createdAt: sortDirection };
+            break;
+        }
+        
         const books = await Book.find(query)
           .populate('category', 'id name slug')
-          .sort({ createdAt: -1 })
+          .sort(sort)
           .skip(skip)
           .limit(limit);
           
