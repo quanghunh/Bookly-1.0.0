@@ -1,3 +1,4 @@
+// backend/src/graphql/simpleResolvers.js - Updated version
 const Book = require('../models/Book');
 const Category = require('../models/Category');
 const User = require('../models/User');
@@ -40,18 +41,30 @@ const resolvers = {
       }
     },
 
-    // Book queries
-    books: async (_, { page = 1, limit = 12 }) => {
+    // Book queries for customers (không cần auth)
+    books: async (_, { page = 1, limit = 12, search }) => {
       try {
         const skip = (page - 1) * limit;
         
-        const books = await Book.find({ isActive: true })
-          .populate('category', 'name slug')
+        // Build query - chỉ lấy sách active
+        let query = { isActive: true };
+        
+        // Search functionality
+        if (search) {
+          query.$or = [
+            { title: new RegExp(search, 'i') },
+            { author: new RegExp(search, 'i') },
+            { description: new RegExp(search, 'i') }
+          ];
+        }
+        
+        const books = await Book.find(query)
+          .populate('category', 'id name slug')
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit);
           
-        const totalCount = await Book.countDocuments({ isActive: true });
+        const totalCount = await Book.countDocuments(query);
         const totalPages = Math.ceil(totalCount / limit);
         
         return {
@@ -69,7 +82,7 @@ const resolvers = {
 
     book: async (_, { id }) => {
       try {
-        return await Book.findById(id).populate('category', 'name slug');
+        return await Book.findById(id).populate('category', 'id name slug');
       } catch (error) {
         throw new Error(`Error fetching book: ${error.message}`);
       }
@@ -77,7 +90,7 @@ const resolvers = {
 
     bookBySlug: async (_, { slug }) => {
       try {
-        return await Book.findOne({ slug, isActive: true }).populate('category', 'name slug');
+        return await Book.findOne({ slug, isActive: true }).populate('category', 'id name slug');
       } catch (error) {
         throw new Error(`Error fetching book: ${error.message}`);
       }
@@ -86,7 +99,7 @@ const resolvers = {
     featuredBooks: async (_, { limit = 8 }) => {
       try {
         return await Book.find({ isFeatured: true, isActive: true })
-          .populate('category', 'name slug')
+          .populate('category', 'id name slug')
           .sort({ createdAt: -1 })
           .limit(limit);
       } catch (error) {
@@ -94,7 +107,7 @@ const resolvers = {
       }
     },
 
-    // User queries
+    // User queries (cần auth cho admin)
     me: async (_, __, { user }) => {
       if (!user) {
         throw new Error('Authentication required');
@@ -106,7 +119,85 @@ const resolvers = {
   Mutation: {
     test: () => 'Test mutation working!',
 
-    // Authentication
+    // Customer Authentication (không cần token)
+    customerLogin: async (_, { input }) => {
+      try {
+        const { email, password } = input;
+
+        // Find user và include password
+        const user = await User.findOne({ 
+          email: email.toLowerCase(),
+          role: 'customer' // Chỉ cho phép customer login
+        }).select('+password');
+        
+        if (!user) {
+          throw new Error('Invalid email or password');
+        }
+
+        if (!user.isActive) {
+          throw new Error('Account is deactivated');
+        }
+
+        // Check password
+        const isPasswordValid = await user.comparePassword(password);
+        if (!isPasswordValid) {
+          throw new Error('Invalid email or password');
+        }
+
+        // Update last login
+        user.lastLogin = new Date();
+        await user.save();
+
+        // Return user info (không cần token)
+        const userResponse = await User.findById(user._id);
+
+        return {
+          success: true,
+          message: 'Login successful',
+          user: userResponse
+        };
+      } catch (error) {
+        throw new Error(`Login failed: ${error.message}`);
+      }
+    },
+
+    // Customer Registration (không cần token)
+    customerRegister: async (_, { input }) => {
+      try {
+        // Check if user already exists
+        const existingUser = await User.findOne({ email: input.email });
+        if (existingUser) {
+          throw new Error('User with this email already exists');
+        }
+
+        // Create new customer
+        const userData = {
+          ...input,
+          role: 'customer', // Force role to customer
+          isActive: true,
+          isEmailVerified: false
+        };
+
+        const user = new User(userData);
+        await user.save();
+
+        // Return user info (không cần token)
+        const userResponse = await User.findById(user._id);
+
+        return {
+          success: true,
+          message: 'Registration successful',
+          user: userResponse
+        };
+      } catch (error) {
+        if (error.code === 11000) {
+          throw new Error('User with this email already exists');
+        }
+        throw new Error(`Registration failed: ${error.message}`);
+      }
+    },
+
+    // Admin Authentication (giữ nguyên, cần token)
     register: async (_, { input }) => {
       try {
         const existingUser = await User.findOne({ email: input.email });
@@ -170,7 +261,7 @@ const resolvers = {
       }
     },
 
-    // Category mutations
+    // Category mutations (Admin only)
     createCategory: async (_, { input }, { user }) => {
       try {
         if (!user || user.role !== 'admin') {
@@ -226,7 +317,7 @@ const resolvers = {
       }
     },
 
-    // Book mutations
+    // Book mutations (Admin only)
     createBook: async (_, { input }, { user }) => {
       try {
         if (!user || user.role !== 'admin') {
@@ -246,7 +337,7 @@ const resolvers = {
 
         await Category.findByIdAndUpdate(input.categoryId, { $inc: { bookCount: 1 } });
 
-        return await Book.findById(book._id).populate('category', 'name slug');
+        return await Book.findById(book._id).populate('category', 'id name slug');
       } catch (error) {
         throw new Error(`Error creating book: ${error.message}`);
       }
@@ -281,7 +372,7 @@ const resolvers = {
           id,
           { ...input, updatedAt: new Date() },
           { new: true, runValidators: true }
-        ).populate('category', 'name slug');
+        ).populate('category', 'id name slug');
 
         return updatedBook;
       } catch (error) {

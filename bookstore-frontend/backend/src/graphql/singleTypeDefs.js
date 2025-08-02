@@ -1,3 +1,4 @@
+// backend/src/graphql/singleTypeDefs.js - Updated version
 const { gql } = require('apollo-server-express');
 
 const typeDefs = gql`
@@ -14,7 +15,7 @@ const typeDefs = gql`
     activeCategories: [Category!]!
     
     # Book queries  
-    books(page: Int = 1, limit: Int = 12): BookConnection!
+    books(page: Int = 1, limit: Int = 12, search: String): BookConnection!
     book(id: ID!): Book
     bookBySlug(slug: String!): Book
     featuredBooks(limit: Int = 8): [Book!]!
@@ -27,7 +28,11 @@ const typeDefs = gql`
     # Test mutation
     test: String
     
-    # Authentication
+    # Customer Authentication (không cần token)
+    customerLogin(input: CustomerLoginInput!): CustomerAuthResponse!
+    customerRegister(input: CustomerRegisterInput!): CustomerAuthResponse!
+    
+    # Admin Authentication (cần token)
     register(input: RegisterInput!): AuthPayload!
     login(input: LoginInput!): AuthPayload!
     
@@ -40,6 +45,27 @@ const typeDefs = gql`
     createBook(input: BookInput!): Book!
     updateBook(id: ID!, input: BookUpdateInput!): Book!
     deleteBook(id: ID!): Boolean!
+  }
+
+  # Customer Auth Types (không cần token)
+  input CustomerLoginInput {
+    email: String!
+    password: String!
+  }
+
+  input CustomerRegisterInput {
+    name: String!
+    email: String!
+    password: String!
+    phone: String
+    dateOfBirth: String
+    gender: String
+  }
+
+  type CustomerAuthResponse {
+    success: Boolean!
+    message: String!
+    user: User!
   }
 
   # Category Types
@@ -95,8 +121,17 @@ const typeDefs = gql`
     isFeatured: Boolean!
     tags: [String!]!
     slug: String!
+    coverImage: BookImage
+    images: [BookImage!]!
     createdAt: String!
     updatedAt: String!
+  }
+
+  type BookImage {
+    url: String!
+    publicId: String
+    alt: String
+    isMain: Boolean
   }
 
   input BookInput {
@@ -150,7 +185,11 @@ const typeDefs = gql`
     email: String!
     role: String!
     phone: String
+    dateOfBirth: String
+    gender: String
     isActive: Boolean!
+    isEmailVerified: Boolean!
+    lastLogin: String
     createdAt: String!
     updatedAt: String!
   }

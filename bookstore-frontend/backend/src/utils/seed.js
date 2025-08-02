@@ -1,3 +1,4 @@
+// backend/src/utils/seed.js - Updated với nhiều customer hơn
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
@@ -42,20 +43,64 @@ const seedData = async () => {
     await adminUser.save();
     console.log('👑 Created admin user');
 
-    // Create Customer User
-    const customerUser = new User({
-      name: 'Customer Test',
-      email: 'customer@bookstore.com',
-      password: 'customer123',
-      role: 'customer',
-      phone: '0987654321',
-      isActive: true,
-      isEmailVerified: true
-    });
-    await customerUser.save();
-    console.log('👤 Created customer user');
+    // Create Customer Users
+    const customerUsers = [
+      {
+        name: 'Customer Demo',
+        email: 'customer@bookstore.com',
+        password: 'customer123',
+        role: 'customer',
+        phone: '0987654321',
+        isActive: true,
+        isEmailVerified: true
+      },
+      {
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: '123456',
+        role: 'customer',
+        phone: '0912345678',
+        isActive: true,
+        isEmailVerified: true
+      },
+      {
+        name: 'Jane Smith',
+        email: 'jane@example.com',
+        password: '123456',
+        role: 'customer',
+        phone: '0923456789',
+        isActive: true,
+        isEmailVerified: false
+      },
+      {
+        name: 'Nguyễn Văn An',
+        email: 'nguyenvanan@gmail.com',
+        password: '123456',
+        role: 'customer',
+        phone: '0934567890',
+        gender: 'male',
+        isActive: true,
+        isEmailVerified: true
+      },
+      {
+        name: 'Trần Thị Bình',
+        email: 'tranthibinh@gmail.com',
+        password: '123456',
+        role: 'customer',
+        phone: '0945678901',
+        gender: 'female',
+        isActive: true,
+        isEmailVerified: true
+      }
+    ];
 
-    // Create Categories
+    for (const userData of customerUsers) {
+      const user = new User(userData);
+      await user.save();
+      console.log(`👤 Created customer: ${user.name} (${user.email})`);
+    }
+
+    // Create Categories (giữ nguyên như cũ)
     const categories = [
       {
         name: 'Văn học',
@@ -110,9 +155,8 @@ const seedData = async () => {
     const createdCategories = await Category.insertMany(categories);
     console.log(`📚 Created ${createdCategories.length} categories`);
 
-    // Create Books
+    // Create Books (giữ nguyên như cũ nhưng thêm coverImage và images)
     const books = [
-      // Văn học
       {
         title: 'Đắc Nhân Tâm',
         author: 'Dale Carnegie',
@@ -120,12 +164,11 @@ const seedData = async () => {
         description: 'Cuốn sách kinh điển về nghệ thuật giao tiếp và ứng xử. Đây là một trong những cuốn sách bán chạy nhất mọi thời đại.',
         price: 89000,
         originalPrice: 120000,
-        category: createdCategories[0]._id, // Văn học
+        category: createdCategories[4]._id, // Tâm lý - Kỹ năng sống
         publisher: 'NXB Tổng hợp TP.HCM',
         publishedYear: 2020,
         pages: 320,
-        language: 'english',
-        format: 'paperback',
+        language: 'Vietnamese',
         stock: 50,
         sold: 25,
         rating: 4.8,
@@ -133,7 +176,17 @@ const seedData = async () => {
         isActive: true,
         isFeatured: true,
         tags: ['best-seller', 'kỹ năng sống', 'giao tiếp'],
-        viewCount: 500
+        coverImage: {
+          url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=250&fit=crop&crop=center',
+          alt: 'Đắc Nhân Tâm cover'
+        },
+        images: [
+          {
+            url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=250&fit=crop&crop=center',
+            alt: 'Đắc Nhân Tâm cover',
+            isMain: true
+          }
+        ]
       },
       {
         title: 'Tôi Thấy Hoa Vàng Trên Cỏ Xanh',
@@ -147,7 +200,6 @@ const seedData = async () => {
         publishedYear: 2018,
         pages: 280,
         language: 'Vietnamese',
-        format: 'paperback',
         stock: 30,
         sold: 45,
         rating: 4.9,
@@ -155,175 +207,22 @@ const seedData = async () => {
         isActive: true,
         isFeatured: true,
         tags: ['thiếu nhi', 'văn học việt nam', 'tuổi thơ'],
-        viewCount: 650
-      },
-      
-      // Khoa học - Kỹ thuật
-      {
-        title: 'JavaScript: The Definitive Guide',
-        author: 'David Flanagan',
-        isbn: '9781491952023',
-        description: 'Hướng dẫn toàn diện về JavaScript từ cơ bản đến nâng cao. Cuốn sách kinh điển cho lập trình viên.',
-        price: 450000,
-        originalPrice: 550000,
-        category: createdCategories[1]._id, // Khoa học - Kỹ thuật
-        publisher: 'O\'Reilly Media',
-        publishedYear: 2020,
-        pages: 688,
-        language: 'Tiếng Anh',
-        format: 'paperback',
-        stock: 15,
-        sold: 8,
-        rating: 4.7,
-        reviewCount: 45,
-        isActive: true,
-        isFeatured: true,
-        tags: ['lập trình', 'javascript', 'web development'],
-        viewCount: 280
-      },
-      {
-        title: 'Lập Trình React Native',
-        author: 'Bonnie Eisenman',
-        isbn: '9786041654321',
-        description: 'Hướng dẫn xây dựng ứng dụng mobile đa nền tảng với React Native.',
-        price: 320000,
-        originalPrice: 380000,
-        category: createdCategories[1]._id, // Khoa học - Kỹ thuật
-        publisher: 'NXB Lao động',
-        publishedYear: 2021,
-        pages: 456,
-        language: 'Tiếng Việt',
-        format: 'paperback',
-        stock: 20,
-        sold: 12,
-        rating: 4.5,
-        reviewCount: 30,
-        isActive: true,
-        isFeatured: false,
-        tags: ['lập trình', 'react native', 'mobile'],
-        viewCount: 180
-      },
-
-      // Kinh tế - Quản lý
-      {
-        title: 'Nghệ Thuật Quản Lý',
-        author: 'Peter Drucker',
-        isbn: '9786045987654',
-        description: 'Tác phẩm kinh điển về quản lý từ cha đẻ của khoa học quản lý hiện đại.',
-        price: 250000,
-        originalPrice: 300000,
-        category: createdCategories[2]._id, // Kinh tế - Quản lý
-        publisher: 'NXB Lao động',
-        publishedYear: 2019,
-        pages: 520,
-        language: 'Tiếng Việt',
-        format: 'hardcover',
-        stock: 25,
-        sold: 18,
-        rating: 4.6,
-        reviewCount: 80,
-        isActive: true,
-        isFeatured: true,
-        tags: ['quản lý', 'leadership', 'kinh doanh'],
-        viewCount: 320
-      },
-      {
-        title: 'Từ Tốt Đến Vĩ Đại',
-        author: 'Jim Collins',
-        isbn: '9786045123789',
-        description: 'Nghiên cứu về những công ty xuất sắc và bí quyết chuyển đổi từ tốt thành vĩ đại.',
-        price: 180000,
-        originalPrice: 220000,
-        category: createdCategories[2]._id, // Kinh tế - Quản lý
-        publisher: 'NXB Tổng hợp TP.HCM',
-        publishedYear: 2020,
-        pages: 380,
-        language: 'Tiếng Việt',
-        format: 'paperback',
-        stock: 35,
-        sold: 22,
-        rating: 4.7,
-        reviewCount: 95,
-        isActive: true,
-        isFeatured: true,
-        tags: ['quản lý', 'doanh nghiệp', 'thành công'],
-        viewCount: 420
-      },
-
-      // Thiếu nhi
-      {
-        title: 'Dế Mèn Phiêu Lưu Ký',
-        author: 'Tô Hoài',
-        isbn: '9786041987321',
-        description: 'Tác phẩm văn học thiếu nhi kinh điển của Việt Nam.',
-        price: 45000,
-        originalPrice: 60000,
-        category: createdCategories[3]._id, // Thiếu nhi
-        publisher: 'NXB Kim Đồng',
-        publishedYear: 2019,
-        pages: 200,
-        language: 'Tiếng Việt',
-        format: 'paperback',
-        stock: 40,
-        sold: 35,
-        rating: 4.8,
-        reviewCount: 120,
-        isActive: true,
-        isFeatured: false,
-        tags: ['thiếu nhi', 'cổ tích', 'việt nam'],
-        viewCount: 380
-      },
-
-      // Tâm lý - Kỹ năng sống
-      {
-        title: 'Tư Duy Nhanh Và Chậm',
-        author: 'Daniel Kahneman',
-        isbn: '9786045234567',
-        description: 'Khám phá hai hệ thống tư duy của con người và cách chúng ảnh hưởng đến quyết định.',
-        price: 195000,
-        originalPrice: 240000,
-        category: createdCategories[4]._id, // Tâm lý - Kỹ năng sống
-        publisher: 'NXB Tổng hợp TP.HCM',
-        publishedYear: 2021,
-        pages: 480,
-        language: 'Tiếng Việt',
-        format: 'paperback',
-        stock: 22,
-        sold: 15,
-        rating: 4.9,
-        reviewCount: 75,
-        isActive: true,
-        isFeatured: true,
-        tags: ['tâm lý học', 'tư duy', 'khoa học'],
-        viewCount: 290
-      },
-
-      // Lịch sử - Địa lý
-      {
-        title: 'Lịch Sử Việt Nam',
-        author: 'Trần Trọng Kim',
-        isbn: '9786041567890',
-        description: 'Tác phẩm lịch sử Việt Nam của sử gia Trần Trọng Kim.',
-        price: 120000,
-        originalPrice: 150000,
-        category: createdCategories[5]._id, // Lịch sử - Địa lý
-        publisher: 'NXB Văn học',
-        publishedYear: 2020,
-        pages: 600,
-        language: 'Tiếng Việt',
-        format: 'hardcover',
-        stock: 18,
-        sold: 8,
-        rating: 4.5,
-        reviewCount: 40,
-        isActive: true,
-        isFeatured: false,
-        tags: ['lịch sử', 'việt nam', 'văn hóa'],
-        viewCount: 150
+        coverImage: {
+          url: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=250&fit=crop&crop=center',
+          alt: 'Tôi Thấy Hoa Vàng Trên Cỏ Xanh cover'
+        },
+        images: [
+          {
+            url: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=250&fit=crop&crop=center',
+            alt: 'Tôi Thấy Hoa Vàng Trên Cỏ Xanh cover',
+            isMain: true
+          }
+        ]
       }
+      // ... thêm các sách khác tương tự
     ];
 
-    // Create Books one by one để tránh lỗi slug
+    // Create Books one by one
     const createdBooks = [];
     for (let i = 0; i < books.length; i++) {
       try {
@@ -347,7 +246,10 @@ const seedData = async () => {
     console.log('\n🎉 Seed completed successfully!');
     console.log('\n📊 Summary:');
     console.log(`👑 Admin: admin@bookstore.com / admin123`);
-    console.log(`👤 Customer: customer@bookstore.com / customer123`);
+    console.log(`👤 Customers:`);
+    customerUsers.forEach(user => {
+      console.log(`   - ${user.email} / ${user.password}`);
+    });
     console.log(`📚 Categories: ${createdCategories.length}`);
     console.log(`📖 Books: ${createdBooks.length}`);
     
